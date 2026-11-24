@@ -1,0 +1,17 @@
+{
+  "name": "davomat-nazorati-tizimi",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "dependencies": {
+    "express": "^4.22.2",
+    "http-proxy-middleware": "^4.2.0",
+    "localtunnel": "^2.0.2"
+  },
+  "scripts": {
+    "start": "node start-production.cjs"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "@davomat/db",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "@prisma/client": "^5.15.0"
+  },
+  "devDependencies": {
+    "prisma": "^5.15.0"
+  },
+  "types": "index.d.ts"
+}

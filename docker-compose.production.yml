@@ -1,0 +1,60 @@
+services:
+  app:
+    image: davomat:20261122
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+    restart: unless-stopped
+    stop_grace_period: 45s
+    env_file:
+      - .env
+    environment:
+      TZ: Asia/Tashkent
+      NODE_ENV: production
+      BOT_MODE: ${BOT_MODE:-polling}
+      DISABLE_BOT: ${DAVOMAT_DISABLE_BOT:-0}
+      PORT: 3000
+      BOT_PORT: 3001
+      BOT_INTERNAL_URL: http://127.0.0.1:3001
+      DATABASE_URL: file:/ram/dev.db
+      GITHUB_PRIMARY: "1"
+      GITHUB_RAM_DIR: /ram
+      GITHUB_STATE_DIR: /state
+      DAVOMAT_RELEASE: "20261122"
+    volumes:
+      - ./state:/state
+    ports:
+      - "127.0.0.1:4000:4000"
+    tmpfs:
+      - /ram:rw,noexec,nosuid,size=256m
+      - /tmp:rw,noexec,nosuid,size=256m
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      start_period: 120s
+      retries: 3
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+volumes:
+  caddy_data:
+  caddy_config:

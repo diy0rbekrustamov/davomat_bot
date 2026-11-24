@@ -1,0 +1,11 @@
+# Avtomatik Telegram fullscreen — 2026-10-27
+
+Admin va teacher Mini App main.tsx renderdan oldin initializeTelegramViewport chaqiradi. Telegram 8+ native requestFullscreen ishlatiladi, ready/expand saqlangan. activated/visibilitychange qayta ochilgan app uchun so'rovni tiklaydi; pending/already-fullscreen/UNSUPPORTED qayta so'rovlarni cheklaydi. Oddiy brauzer yoki eski clientda expanded viewport ishlaydi; browser Fullscreen API gesture cheklovini aylanib o'tish yo'q.
+
+Eski @twa-dev/sdk 7 runtime importlari mahalliy telegram.ts type adapterga almashtirildi. Types avvalgi paketdan type-only import bo'lib qoladi. Rasmiy https://telegram.org/js/telegram-web-app.js bridge olingan va ikkala public katalogida saqlangan, HTML shu lokal skriptni main moduldan oldin yuklaydi. Shu bilan eski SDK yangi API'ni overwrite qilmaydi va har ochilishda tashqi Telegram CDN yuklanishiga bog'liqlik yo'q.
+
+CSS device safe area + Telegram content safe area, dinamik viewport/keyboard/rotation bilan yangilanadi. Admin sidebar/main scroll, pastki navigatsiya, attendance save action, guruh/admin/teacher/history modal, photo viewer close controls va scanner joylashuvi moslashtirildi. Teacher max-w-md tashqi cheklovi olib tashlandi. Camera ruxsatlari va davomat biznes mantiqi o'zgarmadi.
+
+Tekshiruv: ikkala frontend TypeScript/Vite build o'tdi. Image ichida 7 viewport lifecycle testi o'tdi. Headless Chrome'da yig'ilgan haqiqiy bundle va rasmiy bridge, soxta native Telegram bridge hamda faqat sintetik API bilan: 390x844 mobil admin, 390x420 keyboard holati, 844x390 landscape admin, mobil teacher nav/scanner/group dialog va landscape scanner scroll tekshirildi. Fullscreen so'rovi click talab qilmaydi; modal chegaralari insets ichida. Screenshotlar local-runtime/fullscreen-*.png. Bu native Android/iOS Telegramdagi qo'lda tekshiruvning o'rnini bosmaydi.
+
+Base image davomat:students-20261027. Backend/bot/database sxemasi o'zgarmaydi; restart-control mount saqlanadi. Release /opt/davomat/releases/20261027-fullscreen, image davomat:fullscreen-20261027. deploy.sh audited checkpoint/backup yordamida faqat app konteynerini yangilaydi. Rollback deploy/fullscreen/deploy.sh --rollback orqali davomat:students-20261027 image'ga, bazani eski nusxaga qaytarmasdan bajariladi.

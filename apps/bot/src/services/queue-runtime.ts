@@ -1,0 +1,19 @@
+let draining=false;const activeTasks=new Set<Promise<void>>();
+export async function stopQueueWorkers(){draining=true;await Promise.allSettled([...activeTasks]);}
+export async function leasedTask(id:string,statuses:string[],work:(data:any,save:(change:(data:any)=>void|Promise<void>,status?:string)=>Promise<void>,prepare:(change:(data:any)=>void)=>Promise<boolean>)=>Promise<void>){if(draining)return;const task=runLeasedTask(id,statuses,work);activeTasks.add(task);try{await task;}finally{activeTasks.delete(task);}}
+import {AbortController} from 'abort-controller';
+import {prisma,withGithubDatabase} from '@davomat/db';
+import {randomUUID} from 'crypto';
+export async function telegramCall<T>(work:(signal:any)=>Promise<T>):Promise<T>{const c=new AbortController();const timer=setTimeout(()=>c.abort(),20000);timer.unref();try{return await work(c.signal);}finally{clearTimeout(timer);}}
+export function retryDelay(error:any,attempts=1){return Math.max(Number(error?.parameters?.retry_after||0)*1000,Math.min(3600000,15000*2**Math.min(attempts-1,7)));}
+export function recipientUnavailable(error:any){return error?.error_code===403||error?.error_code===400&&/chat not found|user.*not found|deactivated|bot was blocked|bot is not a member|bot was kicked/i.test(error.description||'');}
+async function runLeasedTask(id:string,statuses:string[],work:(data:any,save:(change:(data:any)=>void|Promise<void>,status?:string)=>Promise<void>,prepare:(change:(data:any)=>void)=>Promise<boolean>)=>Promise<void>){
+ const token=randomUUID();const data=await withGithubDatabase(async()=>{const task=await prisma.notification.findUnique({where:{id}});if(!task||!statuses.includes(task.harakat))return null;let d:any;try{d=JSON.parse(task.tafsilot||'{}');if(!d||typeof d!=='object'||Array.isArray(d))throw Error();}catch{await prisma.notification.update({where:{id},data:{harakat:task.harakat+'_INVALID'}});console.error('DAVOMAT_DIAG',JSON.stringify({code:'QUEUE_INVALID',kind:task.harakat}));return null;}if(d.nextAt>Date.now()||d._lease?.expiresAt>Date.now())return null;d._lease={token,expiresAt:Date.now()+600000};d._status=task.harakat;await prisma.notification.update({where:{id},data:{tafsilot:JSON.stringify(d)}});return d;});
+ if(!data)return;
+ let finished=false;
+ const save=async(change:(data:any)=>void|Promise<void>,status?:string)=>{await withGithubDatabase(async()=>{const task=await prisma.notification.findUnique({where:{id}});if(!task)return;const d=JSON.parse(task.tafsilot||'{}');if(d._lease?.token!==token)throw Error('QUEUE_LEASE_LOST');await change(d);delete d._lease;delete d._status;await prisma.notification.update({where:{id},data:{tafsilot:JSON.stringify(d),...(status?{harakat:status}:{})}});});finished=true;};
+ const prepare=async(change:(data:any)=>void)=>withGithubDatabase(async()=>{const task=await prisma.notification.findUnique({where:{id}});if(!task)return false;const d=JSON.parse(task.tafsilot||'{}');if(d._lease?.token!==token||d.deleteRequested)return false;change(d);await prisma.notification.update({where:{id},data:{tafsilot:JSON.stringify(d)}});return true;});
+ try{await work(data,save,prepare);}finally{if(!finished)await withGithubDatabase(async()=>{const task=await prisma.notification.findUnique({where:{id}});if(!task)return;const d=JSON.parse(task.tafsilot||'{}');if(d._lease?.token!==token)return;delete d._lease;delete d._status;await prisma.notification.update({where:{id},data:{tafsilot:JSON.stringify(d)}});});}
+}
+export async function taskIds(statuses:string[]){if(draining)return [];return withGithubDatabase(()=>prisma.notification.findMany({where:{harakat:{in:statuses}},orderBy:{vaqt:'asc'},take:30,select:{id:true}}),{readOnly:true,maxAgeMs:5000});}
+export function queueError(kind:string,error:any){console.error('DAVOMAT_DIAG',JSON.stringify({code:'QUEUE_ERROR',kind,cause:error?.code||error?.name||'request'}));}

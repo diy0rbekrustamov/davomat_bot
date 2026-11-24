@@ -1,0 +1,135 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id             String   @id @default(uuid())
+  telegramId     BigInt   @unique
+  ismFamiliya    String
+  lavozim        String?
+  username       String?  @unique
+  password       String?
+  yaratilganSana DateTime @default(now())
+  faolmi         Boolean  @default(true)
+
+  @@map("admins")
+}
+
+model Group {
+  id                 String   @id @default(uuid())
+  nomi               String
+  kurs               Int      @default(1)
+  sinfRahbariIsmi    String
+  sinfRahbariTelefon String?
+  qrToken            String   @unique @default(uuid())
+  qrCodeImageUrl     String?
+  yaratilganSana     DateTime @default(now())
+  faolmi             Boolean  @default(true)
+
+  teacherId          String?
+  telegramChatId     String?
+  telegramChatIds    String   @default("[]")
+
+  teacher            Teacher? @relation("GroupTeacher", fields: [teacherId], references: [id], onDelete: SetNull)
+
+  students           Student[]
+  attendanceSessions AttendanceSession[]
+
+  @@map("groups")
+}
+
+model Student {
+  id            String   @id @default(uuid())
+  groupId       String
+  ismFamiliya   String
+  rasmFileId    String?
+  qoshilganSana DateTime @default(now())
+
+  group             Group              @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  attendanceRecords AttendanceRecord[]
+
+  @@index([groupId])
+  @@map("students")
+}
+
+model Teacher {
+  id          String   @id @default(uuid())
+  telegramId  BigInt   @unique
+  ismFamiliya String
+  rasmFileId  String?
+  fanNomi     String
+  telefon     String?
+  faolmi      Boolean  @default(true)
+  deletedAt   DateTime?
+
+  attendanceSessions AttendanceSession[]
+  groups             Group[] @relation("GroupTeacher")
+
+  @@map("teachers")
+}
+
+model AttendanceSession {
+  id              String        @id @default(uuid())
+  groupId         String
+  teacherId       String
+  fanNomi         String
+  darsRaqami      Int           @default(1)
+  sana            DateTime      @default(now())
+  boshlanganVaqt  DateTime      @default(now())
+  yakunlanganVaqt DateTime?
+  holat           String        @default("JARAYONDA")
+  rasmlar         String        @default("[]") // JSON stringified array of paths
+  telegramMessageIds String?    // JSON stringified array of message IDs sent to admin chat
+
+  created_at      DateTime      @default(now())
+
+  group           Group              @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  teacher         Teacher            @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  records         AttendanceRecord[]
+
+  @@index([groupId])
+  @@index([teacherId])
+  @@index([sana])
+  @@map("attendance_sessions")
+}
+
+model AttendanceRecord {
+  id         String           @id @default(uuid())
+  sessionId  String
+  studentId  String
+  holat      String           @default("BOR")
+
+  session    AttendanceSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  student    Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, studentId])
+  @@index([sessionId])
+  @@index([studentId])
+  @@map("attendance_records")
+}
+
+model Notification {
+  id           String   @id @default(uuid())
+  kimTomonidan String?  
+  harakat      String
+  tafsilot     String?
+  vaqt         DateTime @default(now())
+
+  @@map("notifications")
+}
+
+model TelegramChat {
+  id          String   @id @default(uuid())
+  chatId      String   @unique
+  title       String
+  addedAt     DateTime @default(now())
+  active      Boolean  @default(true)
+  addedByTelegramIds String @default("[]")
+
+  @@map("telegram_chats")
+}

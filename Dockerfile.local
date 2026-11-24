@@ -1,0 +1,21 @@
+FROM node:20-bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY package.json package-lock.json ./
+COPY apps/backend/package.json apps/backend/
+COPY apps/bot/package.json apps/bot/
+COPY apps/admin-panel/package.json apps/admin-panel/
+COPY apps/teacher-app/package.json apps/teacher-app/
+COPY packages/db/package.json packages/db/
+COPY packages/shared/package.json packages/shared/
+RUN npm ci --no-audit --no-fund
+COPY apps ./apps
+COPY packages ./packages
+COPY start-production.cjs proxy-server.js ./
+RUN cd packages/db && npx prisma generate
+RUN npm run build --workspace bot
+RUN npm run build --workspace backend
+RUN npm run build --workspace admin-panel
+RUN npm run build --workspace teacher-app
+EXPOSE 4000
+CMD ["node", "start-production.cjs"]

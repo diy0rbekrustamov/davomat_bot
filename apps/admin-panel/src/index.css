@@ -1,0 +1,94 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --tg-theme-bg-color: #1c1c1e;
+  --tg-theme-text-color: #ffffff;
+  --tg-theme-hint-color: #8e8e93;
+  --tg-theme-link-color: #0a84ff;
+  --tg-theme-button-color: #0a84ff;
+  --tg-theme-button-text-color: #ffffff;
+  --tg-theme-secondary-bg-color: #2c2c2e;
+  --tg-theme-header-bg-color: #1c1c1e;
+  --tg-theme-accent-text-color: #0a84ff;
+  --tg-theme-section-bg-color: #2c2c2e;
+  --tg-theme-section-header-text-color: #8e8e93;
+  --tg-theme-subtitle-text-color: #8e8e93;
+  --tg-theme-destructive-text-color: #ff453a;
+}
+
+@layer base {
+  body {
+    @apply bg-tgBg text-tgText antialiased;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--tg-theme-hint-color);
+  border-radius: 4px;
+}
+
+@keyframes ellipsis {
+  0% { content: ''; }
+  25% { content: '.'; }
+  50% { content: '..'; }
+  75% { content: '...'; }
+  100% { content: ''; }
+}
+
+.loading-dots::after {
+  content: '';
+  animation: ellipsis 1.5s infinite;
+  display: inline-block;
+  width: 1em;
+  text-align: left;
+}
+
+/* Fullscreen viewport: device safe area + Telegram content controls. */
+:root {
+  --app-height: 100vh;
+  --app-top: calc(max(env(safe-area-inset-top, 0px), var(--app-device-top, 0px)) + var(--app-content-top, 0px));
+  --app-bottom: calc(max(env(safe-area-inset-bottom, 0px), var(--app-device-bottom, 0px)) + var(--app-content-bottom, 0px));
+  --app-left: calc(max(env(safe-area-inset-left, 0px), var(--app-device-left, 0px)) + var(--app-content-left, 0px));
+  --app-right: calc(max(env(safe-area-inset-right, 0px), var(--app-device-right, 0px)) + var(--app-content-right, 0px));
+  --app-usable-height: max(0px, calc(var(--app-height) - var(--app-top) - var(--app-bottom)));
+}
+@supports (height: 100dvh) { :root { --app-height: 100dvh; } }
+html, body, #root { margin: 0; width: 100%; min-height: var(--app-height); }
+body { overscroll-behavior-y: none; }
+.app-shell { box-sizing: border-box; padding-top: var(--app-top); padding-left: var(--app-left); padding-right: var(--app-right); }
+.app-admin { height: var(--app-height); }
+.app-teacher { min-height: var(--app-height); padding-bottom: calc(6rem + var(--app-bottom)); }
+.app-page { min-height: var(--app-usable-height); }
+.app-screen { height: var(--app-usable-height); }
+.app-safe-screen { box-sizing: border-box; min-height: var(--app-height); padding-top: calc(1.5rem + var(--app-top)); padding-bottom: calc(1.5rem + var(--app-bottom)); padding-left: calc(1.5rem + var(--app-left)); padding-right: calc(1.5rem + var(--app-right)); }
+.app-bottom-nav, .app-bottom-action { bottom: 0; left: var(--app-left); right: var(--app-right); width: auto; padding-bottom: calc(1.25rem + var(--app-bottom)); }
+.app-teacher-nav { max-width: 48rem; margin-inline: auto; }
+.app-overlay { box-sizing: border-box; padding-top: max(1rem, var(--app-top)); padding-bottom: max(1rem, var(--app-bottom)); padding-left: max(1rem, var(--app-left)); padding-right: max(1rem, var(--app-right)); }
+.app-overlay > div { max-height: max(0px, calc(var(--app-usable-height) - 2rem)); }
+.app-overlay img { max-height: calc(var(--app-usable-height) - 10rem); }
+.app-scanner { top: var(--app-top); bottom: var(--app-bottom); left: var(--app-left); right: var(--app-right); }
+
+.app-admin main { min-width: 0; }
+@media (max-width: 767px) { .app-admin-content { padding-bottom: calc(6rem + var(--app-bottom)); } }
+
+.app-overlay { overflow-y: auto; }
+.app-overlay > div { min-height: 0; overflow-y: auto; }
+.app-overlay .flex-1 { min-height: 0; }
+.app-viewer-controls { top: var(--app-top); left: var(--app-left); right: var(--app-right); }
+.app-viewer-close { top: calc(var(--app-top) + 1rem); right: calc(var(--app-right) + 1rem); }
+.app-scanner { overflow-y: auto; }
+.app-scanner > div { flex-shrink: 0; }
+@media (max-height: 600px) {
+ .app-scanner { justify-content: flex-start; padding-top: 1rem; }
+ .app-scanner .aspect-square { width: min(100%, 180px); flex-shrink: 0; }
+}

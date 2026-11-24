@@ -1,0 +1,13 @@
+# Surat sifati va birlashtirilgan hisobot albomi — 2026-10-27
+
+PhotoUpload react-webcam forceScreenshotSourceSize=true va screenshotQuality=0.98 bilan kamera streamining haqiqiy o'lchamida JPEG oladi; 1920x1080 ideal stream talabi saqlangan. Asinxron capture busy guard, 8MB capture chegarasi va 5 surat limiti bor. Server/GitHub mavjud original bytesni qayta kichraytirmasdan saqlashda davom etadi. Telegram photo uzatishidagi native siqish saqlanadi. Oldin past o'lchamda yozilgan suratlarning yo'qolgan detallari tiklanmaydi.
+
+Yangi davomat queue yozuvlari deliveryVersion=2 va attendanceSnapshot oladi. Matn uchun faqat kerakli maydonlar tanlanadi, BigInt kiritilmaydi. Hisobotdagi ism/fan/sana/yo'qlar va rasmlar commit vaqtida muzlatiladi; yetkazish uchun joriy Telegram chat ulanishlari ishlatiladi (migration mos). Birinchi birlik: 2–5 rasmli sendMediaGroup, report captionlar bilan; bitta rasmda sendPhoto+caption. Alohida Hisobotlar inline tugmasi olib tashlangan. Caption 1024 UTF-16 belgidan oshmaydi; uzun matn albumdagi boshqa rasmlarga taqsimlanadi, undan ortig'i birinchi album message IDga reply qilib boradi. Hech bir ism ataylab kesilmaydi. Rasmsiz hisobot text bo'lib qoladi.
+
+Album IDs va progress bir saqlash commitida yoziladi; oxirgi birlik yuborilganda recipient done belgisi ham shu commitda saqlanadi. Oldingi v1 queue cursorlari eski tartibda davom etadi. Upsert mavjud progressni almashtirmaydi. Telegram yuborish DB lockdan tashqarida. Telegram qabul qilganidan keyin progress commitidan oldingi uzilishda duplicate ehtimoli fundamental ravishda qoladi — Telegram va GitHub yagona transaction emas.
+
+Tasdiqlangan sinovlar: yangi album/quality regressiyalari bilan 39 bot/queue/restart/reminder/QR testi o'tdi. Haqiqiy backend/Prisma + fake GitHub integratsiyasi o'tdi; complete yangi v2 snapshotni GitHub commit bilan saqlashi tekshirildi. Headless Chrome'da yig'ilgan haqiqiy teacher bundle, synthetic QR/canvas camera va fake API bilan QR -> davomat -> 5 surat -> yakunlash oqimi o'tdi. Source video 1920x1080, preview 358px; FormData ichidagi 5 JPEGning barchasi decode qilinganda 1920x1080 chiqdi. Test suratlari / xabarlari real foydalanuvchilarga yuborilmadi.
+
+Image davomat:reports-20261027, base davomat:performance-20261027. Tezlashtirish va fullscreen tuzatishlari saqlanadi. Deploy checkpoint barcha pending queue tugashini tekshiradi, GitHub va SQLite backup oladi; faqat app konteyneri yangilanadi. Rollback deploy/reports/deploy.sh --rollback ham ayni tekshiruvdan o'tishi shart; bazani oldingi nusxaga qaytarish kerak emas.
+
+Manbalar: https://github.com/mozmorris/react-webcam (forceScreenshotSourceSize, screenshotQuality); https://core.telegram.org/bots/api#sendmediagroup va #inputmediaphoto (album va caption limitlari).

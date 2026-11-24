@@ -1,0 +1,12 @@
+DAVOMAT BOT — ADMIN HANDOVER
+
+Source snapshot: release 20261122, matching the latest release previously verified as running.
+The production server was not changed by preparing this handover folder.
+
+This folder includes the application runtime environment in .env. It contains live application credentials (including Telegram bot, GitHub storage, JWT, and superadmin settings). Share this folder only with the authorized administration/development team. Do not commit .env to Git, publish it, or paste its contents into chat/logs. Rotate credentials if this folder reaches an unintended recipient.
+
+Deployment from a Linux server with Docker Compose:
+  docker compose -f docker-compose.production.yml up -d --build
+  docker compose -f docker-compose.production.yml ps
+
+The compose file builds this source snapshot and persists application state in ./state. Check domain names in deploy/Caddyfile and confirm the server firewall/DNS before publishing. The image release is tagged davomat:20261122.

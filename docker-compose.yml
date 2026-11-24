@@ -1,0 +1,29 @@
+services:
+  app:
+    image: davomat_server_uchun_toza-app:owner-20261007
+    container_name: davomat_server_uchun_toza-app-1
+    restart: always
+    entrypoint: [node]
+    command: [start-production.cjs]
+    env_file: [./data/secrets/github-runtime.env]
+    ports: ["4000:4000"]
+    mem_limit: 512m
+    memswap_limit: 512m
+    cpus: 1
+    pids_limit: 256
+    logging:
+      driver: none
+    tmpfs:
+      - /ram:rw,noexec,nosuid,size=128m
+      - /tmp:rw,noexec,nosuid,size=128m
+    networks: [default]
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      start_period: 40s
+      retries: 3
+networks:
+  default:
+    external: true
+    name: davomat_server_uchun_toza_default

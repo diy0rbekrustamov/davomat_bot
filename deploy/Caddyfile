@@ -1,0 +1,9 @@
+davomat.provveb.uz {
+    encode zstd gzip
+    reverse_proxy app:4000
+}
+
+http://164.68.102.68 {
+    encode gzip
+    reverse_proxy app:4000
+}

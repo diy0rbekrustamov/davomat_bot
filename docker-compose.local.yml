@@ -1,0 +1,31 @@
+services:
+  app:
+    image: davomat-local:20261023
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    container_name: davomat-local
+    restart: unless-stopped
+    dns: [1.1.1.1, 8.8.8.8]
+    env_file: [./data/secrets/github-runtime.env]
+    environment:
+      WEBAPP_URL: ${DAVOMAT_PUBLIC_URL:?Public URL required}
+      ADMIN_WEBAPP_URL: ${DAVOMAT_PUBLIC_URL}
+      TEACHER_WEBAPP_URL: ${DAVOMAT_PUBLIC_URL}/teacher
+      WEBHOOK_DOMAIN: ${DAVOMAT_PUBLIC_URL}
+      BOT_MODE: polling
+    ports: ["127.0.0.1:4000:4000"]
+    tmpfs:
+      - /ram:rw,noexec,nosuid,size=128m
+      - /tmp:rw,noexec,nosuid,size=128m
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: "2"
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      start_period: 90s
+      retries: 3
